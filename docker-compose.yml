@@ -1,0 +1,41 @@
+# freeforallloggingandstatus — One-command deploy (Ubuntu/Docker)
+# Usage: docker compose up -d
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ffa-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-freeforall}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-freeforall}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-freeforall} -d ${POSTGRES_DB:-freeforall}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: ffa-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER:-freeforall}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-freeforall}
+      JWT_SECRET: ${JWT_SECRET:-change-in-production}
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - app_env:/app/.env
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  app_env:

@@ -1,0 +1,16 @@
+{
+  "name": "viancen/freeforall",
+  "description": "Monolog handler to send logs to FreeForAll (self-hosted Flare/Papertrail replacement)",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Viancen\\FreeForAll\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=8.1",
+    "monolog/monolog": "^3.0",
+    "guzzlehttp/guzzle": "^7.0"
+  }
+}
