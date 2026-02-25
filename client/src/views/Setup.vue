@@ -2,9 +2,9 @@
   <div class="min-h-screen flex items-center justify-center bg-zinc-900 p-4">
     <div class="w-full max-w-md rounded-xl bg-zinc-800 shadow-xl border border-zinc-700 p-6">
       <h1 class="text-xl font-semibold text-zinc-100 mb-2">FreeForAll — Setup</h1>
-      <p class="text-zinc-400 text-sm mb-6">Configure database and create the first admin account.</p>
+      <p class="text-zinc-400 text-sm mb-6">{{ dockerDatabaseAvailable ? 'Create the first admin account.' : 'Configure database and create the first admin account.' }}</p>
       <form @submit.prevent="submit" class="space-y-4">
-        <div>
+        <div v-if="!dockerDatabaseAvailable">
           <label class="block text-sm font-medium text-zinc-300 mb-1">Database URL</label>
           <input
             v-model="form.databaseUrl"
@@ -45,32 +45,40 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { setup as setupApi } from '../api';
 
 const router = useRouter();
 const loading = ref(false);
 const error = ref('');
+const dockerDatabaseAvailable = ref(false);
 const form = reactive({
   databaseUrl: '',
   email: '',
   password: '',
 });
 
+onMounted(async () => {
+  try {
+    const { data } = await setupApi.status();
+    dockerDatabaseAvailable.value = !!data.dockerDatabaseAvailable;
+  } catch {
+    dockerDatabaseAvailable.value = false;
+  }
+});
+
 async function submit() {
   error.value = '';
-  if (!form.databaseUrl.trim()) {
+  if (!dockerDatabaseAvailable.value && !form.databaseUrl.trim()) {
     error.value = 'Database URL is required';
     return;
   }
   loading.value = true;
   try {
-    await setupApi.complete({
-      databaseUrl: form.databaseUrl.trim(),
-      email: form.email,
-      password: form.password,
-    });
+    const body = { email: form.email, password: form.password };
+    if (!dockerDatabaseAvailable.value) body.databaseUrl = form.databaseUrl.trim();
+    await setupApi.complete(body);
     router.push('/login');
   } catch (e) {
     error.value = e.response?.data?.error || e.response?.data?.detail || e.message || 'Setup failed';

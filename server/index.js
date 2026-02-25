@@ -51,7 +51,11 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(clientDir, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-  startWorker();
-});
+(async () => {
+  const { runAutoSetup } = require('./routes/setup');
+  if (typeof runAutoSetup === 'function') await runAutoSetup();
+  app.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+    startWorker();
+  });
+})();

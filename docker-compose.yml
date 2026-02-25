@@ -1,5 +1,6 @@
 # freeforallloggingandstatus — One-command deploy (Ubuntu/Docker)
 # Usage: docker compose up -d
+# First run: Postgres + admin are created automatically. Run: docker compose logs app — login admin@localhost, password in logs.
 
 services:
   postgres:

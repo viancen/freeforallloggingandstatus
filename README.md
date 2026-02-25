@@ -18,7 +18,7 @@ cd freeforallloggingandstatus
 docker compose up -d
 ```
 
-Open `http://localhost:3000`. On first run you’ll see the **Setup Wizard**: enter your Postgres URL (or use the same as in `docker-compose.yml`) and create the first admin account. Then log in and add an Application to get an API key.
+Open `http://localhost:3000`. With Docker, **no setup wizard**: Postgres and the first admin are created automatically. Get the generated login from the app container logs: `docker compose logs app` — look for **Login:** `admin@localhost` and **Password:** (change it after first login). Then add an Application to get an API key.
 
 ---
 
@@ -31,6 +31,50 @@ Open `http://localhost:3000`. On first run you’ll see the **Setup Wizard**: en
 | `POSTGRES_DB` | Database name (default: `freeforall`) |
 | `PORT` | App port (default: `3000`) |
 | `JWT_SECRET` | Secret for dashboard JWT (set in production) |
+
+---
+
+## Deployment
+
+### AWS
+
+- **EC2 or Lightsail:** Launch an Ubuntu 22.04 instance, SSH in, then install Docker and Docker Compose. Clone the repo, copy `.env.example` to `.env`, set `POSTGRES_PASSWORD` and `JWT_SECRET`, and run `docker compose up -d`. Put a load balancer or Nginx/Caddy in front with SSL (e.g. ACM + ALB, or Certbot).
+- **ECS (optional):** Run the app as a task and use RDS (PostgreSQL 18) for the database. Build the app image from the repo `Dockerfile`, push to ECR, and configure task definition with `DATABASE_URL` and `JWT_SECRET`. Point your domain to the ECS service (ALB).
+
+### Laravel Forge
+
+1. Create a new server in Forge (Ubuntu) or use an existing one.
+2. Under **Server → Scripts** (or SSH), install Docker and Docker Compose, then clone the repo into a directory (e.g. `/home/forge/freeforall`).
+3. Copy `.env.example` to `.env`, set `POSTGRES_PASSWORD`, `JWT_SECRET`, and optionally `POSTGRES_USER` / `POSTGRES_DB`.
+4. Run `docker compose up -d`.
+5. In Forge, add a **Site** for your domain and set the **Web Directory** to the same path, or configure a **Proxy** to forward to `http://127.0.0.1:3000`. Enable SSL via Forge (Let’s Encrypt).
+
+### Hetzner
+
+1. Create a Cloud server (e.g. CX22 or larger) with Ubuntu 22.04.
+2. SSH in and install Docker and Docker Compose, then clone the repo.
+3. Copy `.env.example` to `.env`, set `POSTGRES_PASSWORD` and `JWT_SECRET`.
+4. Run `docker compose up -d`.
+5. Use Nginx or Caddy as a reverse proxy to `http://127.0.0.1:3000` and obtain SSL (e.g. Certbot or Caddy’s automatic HTTPS). Optionally use Hetzner Load Balancer in front of multiple instances.
+
+### VPS (generic)
+
+Works on any VPS (DigitalOcean, Linode, Vultr, etc.):
+
+1. **Install Docker & Compose** (Ubuntu/Debian):
+   ```bash
+   curl -fsSL https://get.docker.com | sh
+   sudo apt install -y docker-compose-plugin
+   ```
+2. **Clone and configure:**
+   ```bash
+   git clone https://github.com/your-org/freeforallloggingandstatus.git
+   cd freeforallloggingandstatus
+   cp .env.example .env
+   # Edit .env: set POSTGRES_PASSWORD, JWT_SECRET
+   ```
+3. **Start:** `docker compose up -d`
+4. **Reverse proxy:** Point Nginx or Caddy at `http://127.0.0.1:3000`, enable SSL (e.g. `certbot --nginx` or Caddy’s automatic HTTPS).
 
 ---
 
