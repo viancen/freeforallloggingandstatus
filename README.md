@@ -357,4 +357,4 @@ $log->error('Something broke', ['user_id' => 123, 'trace' => $e->getTraceAsStrin
 
 ## License
 
-MIT.
+Free to use, modify, and distribute. **No warranty; no liability.** Use at your own risk. See [LICENSE](LICENSE).
