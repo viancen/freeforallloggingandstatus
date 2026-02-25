@@ -107,59 +107,84 @@ module.exports = function setupRouter() {
     }
     try {
       const { hasAdminUser } = require('../db');
-      const hasAdmin = await hasAdminUser();
+      let hasAdmin = await hasAdminUser();
+      // When Docker DB is set but no admin yet, run auto-setup now (e.g. startup ran before Postgres was ready)
+      if (!hasAdmin && dockerDatabaseAvailable) {
+        await runAutoSetup();
+        resetPool();
+        require('dotenv').config({ path: ENV_PATH });
+        hasAdmin = await hasAdminUser();
+      }
       return res.json({ setupRequired: !hasAdmin, reason: hasAdmin ? null : 'no_admin', dockerDatabaseAvailable });
     } catch {
+      // Schema or DB not ready; with Docker, try auto-setup once then re-check
+      if (dockerDatabaseAvailable) {
+        await runAutoSetup();
+        resetPool();
+        require('dotenv').config({ path: ENV_PATH });
+        try {
+          const { hasAdminUser } = require('../db');
+          const hasAdmin = await hasAdminUser();
+          return res.json({ setupRequired: !hasAdmin, reason: hasAdmin ? null : 'no_admin', dockerDatabaseAvailable });
+        } catch {
+          // ignore
+        }
+      }
       return res.json({ setupRequired: true, reason: 'database_error', dockerDatabaseAvailable });
     }
   });
 
   /** POST /api/setup — body: email, password; optionally databaseUrl (or host/user/password/database) when not using Docker */
   router.post('/', async (req, res) => {
-    loadEnv();
-    const { databaseUrl, host, port, user, password, database, email, password: plainPassword } = req.body || {};
-    // When DATABASE_URL is set (e.g. Docker), use it automatically — no database step
-    let dbUrl = process.env.DATABASE_URL || databaseUrl || (host && user && password && database
-      ? `postgres://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port || 5432}/${database}`
-      : null);
-
-    if (!dbUrl || !email || !plainPassword) {
-      return res.status(400).json({ error: 'Missing database URL (or host/user/password/database) and/or email and password' });
-    }
-
-    const jwtSecret = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
-    const envToWrite = {
-      DATABASE_URL: dbUrl,
-      JWT_SECRET: jwtSecret,
-    };
-
-    let pool;
     try {
-      pool = new Pool({ connectionString: dbUrl });
-      await pool.query('SELECT 1');
+      loadEnv();
+      const { databaseUrl, host, port, user, password, database, email, password: plainPassword } = req.body || {};
+      // When DATABASE_URL is set (e.g. Docker), use it automatically — no database step
+      let dbUrl = process.env.DATABASE_URL || databaseUrl || (host && user && password && database
+        ? `postgres://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}:${port || 5432}/${database}`
+        : null);
+
+      if (!dbUrl || !email || !plainPassword) {
+        return res.status(400).json({ error: 'Missing database URL (or host/user/password/database) and/or email and password' });
+      }
+
+      const jwtSecret = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
+      const envToWrite = {
+        DATABASE_URL: dbUrl,
+        JWT_SECRET: jwtSecret,
+      };
+
+      let pool;
+      try {
+        pool = new Pool({ connectionString: dbUrl });
+        await pool.query('SELECT 1');
+      } catch (err) {
+        return res.status(400).json({ error: 'Database connection failed', detail: err.message });
+      }
+
+      try {
+        await runSchema(pool);
+        const passwordHash = await bcrypt.hash(plainPassword, 10);
+        await pool.query(
+          `INSERT INTO users (email, password_hash, is_admin) VALUES ($1, $2, true)
+           ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, is_admin = true`,
+          [email, passwordHash]
+        );
+      } catch (err) {
+        return res.status(500).json({ error: 'Setup failed', detail: err.message });
+      } finally {
+        await pool.end().catch(() => {});
+      }
+
+      writeEnv(envToWrite);
+      resetPool();
+      require('dotenv').config({ path: ENV_PATH });
+
+      return res.json({ success: true });
     } catch (err) {
-      return res.status(400).json({ error: 'Database connection failed', detail: err.message });
+      console.error('Setup POST error:', err);
+      return res.status(500).json({ error: 'Setup failed', detail: err.message || String(err) });
     }
-
-    try {
-      await runSchema(pool);
-      const passwordHash = await bcrypt.hash(plainPassword, 10);
-      await pool.query(
-        `INSERT INTO users (email, password_hash, is_admin) VALUES ($1, $2, true)
-         ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, is_admin = true`,
-        [email, passwordHash]
-      );
-    } catch (err) {
-      return res.status(500).json({ error: 'Setup failed', detail: err.message });
-    } finally {
-      await pool.end();
-    }
-
-    writeEnv(envToWrite);
-    resetPool();
-    require('dotenv').config({ path: ENV_PATH });
-
-    return res.json({ success: true });
   });
 
   return router;

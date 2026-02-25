@@ -81,7 +81,11 @@ async function submit() {
     await setupApi.complete(body);
     router.push('/login');
   } catch (e) {
-    error.value = e.response?.data?.error || e.response?.data?.detail || e.message || 'Setup failed';
+    const noResponse = !e.response;
+    const msg = e.response?.data?.error || e.response?.data?.detail || e.message || 'Setup failed';
+    error.value = noResponse
+      ? 'Cannot reach the server. Ensure the backend is running (e.g. docker compose up, or npm run dev in the server folder).'
+      : msg;
   } finally {
     loading.value = false;
   }

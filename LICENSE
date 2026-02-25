@@ -18,5 +18,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-You use this software at your own risk. The authors and contributors
-disclaim all liability for any loss, damage, or harm resulting from its use.
+DISCLAIMER — LIABILITY EXCLUDED TO THE MAXIMUM EXTENT PERMITTED BY LAW
+
+To the fullest extent permitted by applicable law, the authors and contributors
+exclude ALL liability (whether in contract, tort, negligence, strict liability,
+or otherwise) for any loss, damage, cost, claim, or harm of any kind arising
+from or in connection with the Software or its use. You use this software
+entirely at your own risk.
+
+AUDIT REQUIRED
+
+Whether you use this Software in development or in production, you must
+review and audit every line of code yourself. This Software is provided only
+as a bootstrap: it may be complete in functionality but comes with NO
+warranty of security whatsoever. Do not rely on it for security, correctness,
+or fitness for any purpose without conducting your own full review and
+audit. The authors and contributors assume no responsibility for how you
+use, deploy, or rely on the Software.
