@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-zinc-900 p-4">
-    <div class="w-full max-w-md rounded-xl bg-zinc-800 shadow-xl border border-zinc-700 p-6">
+  <div class="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
+    <div class="w-full max-w-md rounded-2xl bg-zinc-900 shadow-xl border border-zinc-800 p-8">
       <h1 class="text-xl font-semibold text-zinc-100 mb-2">FreeForAll — Setup</h1>
       <p class="text-zinc-400 text-sm mb-6">{{ dockerDatabaseAvailable ? 'Create the first admin account.' : 'Configure database and create the first admin account.' }}</p>
       <form @submit.prevent="submit" class="space-y-4">

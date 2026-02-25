@@ -2,13 +2,16 @@
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60" @click.self="$emit('close')">
     <div class="bg-zinc-800 border border-zinc-700 rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
       <div class="px-4 py-3 border-b border-zinc-700 flex items-center justify-between">
-        <h3 class="font-medium text-zinc-100">Log detail</h3>
+        <h3 class="font-medium text-zinc-100 flex items-center gap-2">
+          <DocumentTextIcon class="h-5 w-5 text-emerald-500" />
+          Log detail
+        </h3>
         <button
           @click="$emit('close')"
-          class="text-zinc-400 hover:text-zinc-200 p-1"
+          class="rounded-lg p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
           aria-label="Close"
         >
-          ✕
+          <XMarkIcon class="h-5 w-5" />
         </button>
       </div>
       <div class="p-4 overflow-y-auto flex-1 space-y-4">
@@ -39,6 +42,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { DocumentTextIcon, XMarkIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
   log: { type: Object, required: true },

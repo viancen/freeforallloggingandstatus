@@ -2,12 +2,25 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { ready } from '../api';
 import Setup from '../views/Setup.vue';
 import Login from '../views/Login.vue';
-import Dashboard from '../views/Dashboard.vue';
+import DashboardLayout from '../layouts/DashboardLayout.vue';
+import Overview from '../views/Overview.vue';
+import LogsView from '../views/LogsView.vue';
+import ApplicationsView from '../views/ApplicationsView.vue';
+import MonitorsView from '../views/MonitorsView.vue';
 
 const routes = [
   { path: '/setup', name: 'Setup', component: Setup, meta: { public: true, setup: true } },
   { path: '/login', name: 'Login', component: Login, meta: { public: true } },
-  { path: '/', name: 'Dashboard', component: Dashboard },
+  {
+    path: '/',
+    component: DashboardLayout,
+    children: [
+      { path: '', name: 'Overview', component: Overview },
+      { path: 'logs', name: 'Logs', component: LogsView },
+      { path: 'applications', name: 'Applications', component: ApplicationsView },
+      { path: 'monitors', name: 'Monitors', component: MonitorsView },
+    ],
+  },
 ];
 
 const router = createRouter({

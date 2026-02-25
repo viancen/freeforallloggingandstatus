@@ -31,10 +31,11 @@ services:
       PORT: 3000
       DATABASE_URL: postgres://${POSTGRES_USER:-freeforall}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-freeforall}
       JWT_SECRET: ${JWT_SECRET:-change-in-production}
+      ENV_FILE_PATH: /app/data/.env
     ports:
       - "${PORT:-3000}:3000"
     volumes:
-      - app_env:/app/.env
+      - app_env:/app/data
     restart: unless-stopped
 
 volumes:

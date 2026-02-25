@@ -9,7 +9,7 @@ const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
 const { resetPool } = require('../db');
 
-const ENV_PATH = path.join(__dirname, '..', '..', '.env');
+const ENV_PATH = process.env.ENV_FILE_PATH || path.join(__dirname, '..', '..', '.env');
 const AUTO_SETUP_EMAIL = 'admin@localhost';
 
 function loadEnv() {

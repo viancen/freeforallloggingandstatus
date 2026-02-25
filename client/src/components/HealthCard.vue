@@ -1,7 +1,7 @@
 <template>
   <div
-    class="rounded-lg border p-4 transition-colors"
-    :class="isUp ? 'border-emerald-700/50 bg-emerald-900/20' : 'border-red-700/50 bg-red-900/20'"
+    class="rounded-xl border p-4 transition-colors"
+    :class="isUp ? 'border-emerald-800/50 bg-zinc-900/50' : 'border-red-800/50 bg-zinc-900/50'"
   >
     <div class="flex items-center justify-between mb-2">
       <span class="text-zinc-200 font-medium truncate flex-1 mr-2" :title="monitor.url">{{ monitor.url }}</span>
